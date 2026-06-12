@@ -6,6 +6,12 @@ class StudentCreate(BaseModel):
     age: int
     major: str
 
+class StudentUpdate(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    age: int | None = None
+    major: str | None = None
+
 class StudentResponse(StudentCreate):
     id: int
 

@@ -91,3 +91,42 @@ def test_duplicate_email():
     response = client.post("/students", json={"name": "Frank2", "email": "frank@test.com", "age": 26, "major": "Biology"})
     assert response.status_code == 400
     assert "already registered" in response.json()["detail"]
+
+
+def test_update_student():
+    resp = client.post("/students", json={"name": "Grace", "email": "grace@test.com", "age": 22, "major": "Art"})
+    student_id = resp.json()["id"]
+    response = client.put(f"/students/{student_id}", json={"name": "Grace Hopper", "major": "Computer Science"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "Grace Hopper"
+    assert data["major"] == "Computer Science"
+    assert data["email"] == "grace@test.com"
+
+
+def test_update_student_not_found():
+    response = client.put("/students/999", json={"name": "Nobody"})
+    assert response.status_code == 404
+
+
+def test_list_students_filter_by_major():
+    client.post("/students", json={"name": "Alice", "email": "a@test.com", "age": 22, "major": "CS"})
+    client.post("/students", json={"name": "Bob", "email": "b@test.com", "age": 23, "major": "Math"})
+    client.post("/students", json={"name": "Carol", "email": "c@test.com", "age": 24, "major": "CS"})
+    response = client.get("/students?major=CS")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert all(s["major"] == "CS" for s in data)
+
+
+def test_student_stats():
+    client.post("/students", json={"name": "Alice", "email": "a@test.com", "age": 20, "major": "CS"})
+    client.post("/students", json={"name": "Bob", "email": "b@test.com", "age": 30, "major": "Math"})
+    response = client.get("/students/stats")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_students"] == 2
+    assert data["average_age"] == 25.0
+    assert data["by_major"]["CS"] == 1
+    assert data["by_major"]["Math"] == 1
