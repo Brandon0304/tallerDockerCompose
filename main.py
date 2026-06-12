@@ -30,6 +30,11 @@ def list_students(major: str | None = Query(None), db: Session = Depends(get_db)
         query = query.filter(Student.major == major)
     return query.all()
 
+@app.get("/students/majors")
+def list_majors(db: Session = Depends(get_db)):
+    results = db.query(Student.major).distinct().order_by(Student.major).all()
+    return [m[0] for m in results]
+
 @app.get("/students/stats")
 def student_stats(db: Session = Depends(get_db)):
     total = db.query(func.count(Student.id)).scalar()
